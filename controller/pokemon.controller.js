@@ -1,15 +1,8 @@
 const Pokemon = require('../model/pokemon.model');
-const multer = require('multer');
-const storage = multer.diskStorage({
-  destination: './public/images/pokemon',
-  filename: function (req, file, callback) {
-    crypto.pseudoRandomBytes(16, function(err, raw) {
-    if (err) return callback(err);
-    callback(null, raw.toString('hex') + path.extname(file.originalname));
-    });
-  }
-});
-var upload = multer({ storage:storage});
+var http = require('http');
+var client = http.createClient(3000, 'localhost');
+
+
 
 //Get all pokemons
 let getPokemon = (req, res) => {
@@ -24,11 +17,14 @@ let createPokemon = (req, res) =>{
     let pokemon = new Pokemon(data);
     Pokemon.create(pokemon,(err, data) => {
         console.log(data);
-    //     if(data.picture){
-    //         upload.single('picture');
-    //    //return res.status(200).json({Pokemon:data});
-       
-    //     }
+        if(data.picture){
+            var request = client.request('POST', '/upload');
+            request.write(data.picture);
+            request.end();
+            request.on("response", function (response) {
+               // return response.status(200).json({message:"success"});
+            });      
+        }
         handleresponse(res, err, data);
     });
 }
